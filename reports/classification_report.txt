@@ -1,22 +1,22 @@
-Model Accuracy: 98.71%
+Model Accuracy: 98.84%
 
                 precision    recall  f1-score   support
 
-   freshapples       0.99      1.00      1.00       791
+   freshapples       0.98      1.00      0.99       791
    freshbanana       1.00      1.00      1.00       892
- freshcucumber       1.00      0.96      0.98       279
-     freshokra       0.95      0.99      0.97       370
-  freshoranges       1.00      0.99      1.00       388
+ freshcucumber       0.96      0.98      0.97       279
+     freshokra       0.97      0.99      0.98       370
+  freshoranges       0.99      0.99      0.99       388
    freshpotato       0.98      0.94      0.96       270
    freshtomato       0.99      1.00      0.99       255
-  rottenapples       1.00      0.99      0.99       988
+  rottenapples       0.99      0.99      0.99       988
   rottenbanana       1.00      1.00      1.00       900
-rottencucumber       0.88      1.00      0.94       255
-    rottenokra       1.00      0.83      0.91       224
- rottenoranges       0.99      0.99      0.99       403
-  rottenpotato       0.96      0.99      0.97       370
-  rottentomato       1.00      1.00      1.00       353
+rottencucumber       0.98      0.96      0.97       255
+    rottenokra       1.00      0.95      0.97       224
+ rottenoranges       1.00      0.99      0.99       403
+  rottenpotato       0.96      0.98      0.97       370
+  rottentomato       1.00      0.99      1.00       353
 
       accuracy                           0.99      6738
-     macro avg       0.98      0.98      0.98      6738
+     macro avg       0.99      0.98      0.98      6738
   weighted avg       0.99      0.99      0.99      6738

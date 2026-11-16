@@ -17,16 +17,17 @@ CLASS_NAMES = [
 ]
 
 train_ds = tf.keras.utils.image_dataset_from_directory(
-    "data/processed/Train",
+    "data/splits/Train",
     image_size=IMAGE_SIZE,
     batch_size=BATCH_SIZE,
     class_names=CLASS_NAMES,
     label_mode="int",
+    shuffle=True,
     seed=42
 )
 
-test_ds = tf.keras.utils.image_dataset_from_directory(
-    "data/processed/Test",
+validation_ds = tf.keras.utils.image_dataset_from_directory(
+    "data/splits/Validation",
     image_size=IMAGE_SIZE,
     batch_size=BATCH_SIZE,
     class_names=CLASS_NAMES,
@@ -35,8 +36,9 @@ test_ds = tf.keras.utils.image_dataset_from_directory(
 )
 
 AUTOTUNE = tf.data.AUTOTUNE
+
 train_ds = train_ds.prefetch(buffer_size=AUTOTUNE)
-test_ds = test_ds.prefetch(buffer_size=AUTOTUNE)
+validation_ds = validation_ds.prefetch(buffer_size=AUTOTUNE)
 
 base_model = MobileNetV2(
     input_shape=(160, 160, 3),
@@ -71,17 +73,15 @@ early_stopping = tf.keras.callbacks.EarlyStopping(
 
 history = model.fit(
     train_ds,
-    validation_data=test_ds,
+    validation_data=validation_ds,
     epochs=EPOCHS,
     callbacks=[early_stopping]
 )
-
-loss, accuracy = model.evaluate(test_ds)
 
 model.save("models/freshvision_model.keras")
 
 with open("models/class_names.json", "w") as file:
     json.dump(CLASS_NAMES, file)
 
-print(f"\nTest Accuracy: {accuracy * 100:.2f}%")
+print("\nMODEL TRAINING COMPLETE")
 print("Model saved successfully!")

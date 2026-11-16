@@ -1,14 +1,12 @@
 
 import os
-import shutil
+from pathlib import Path
+from sklearn.model_selection import train_test_split
 
-SOURCE_TRAIN = "data/dataset/Train"
-SOURCE_TEST = "data/dataset/Test"
+SOURCE_DIR = Path("data/dataset/Train")
+OUTPUT_DIR = Path("data/splits")
 
-TARGET_TRAIN = "data/processed/Train"
-TARGET_TEST = "data/processed/Test"
-
-CLASSES = [
+CLASS_NAMES = [
     "freshapples",
     "freshbanana",
     "freshcucumber",
@@ -25,35 +23,62 @@ CLASSES = [
     "rottentomato",
 ]
 
-TEST_FOLDER_MAP = {
-    "freshpotato": "freshpotato",
-    "freshtomato": "freshtomato",
-    "rottenpotato": "rottenpotato",
-    "rottentomato": "rottentomato",
-}
+IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
 
-for folder in [TARGET_TRAIN, TARGET_TEST]:
-    os.makedirs(folder, exist_ok=True)
+if OUTPUT_DIR.exists():
+    raise FileExistsError(
+        "data/splits already exists. It was not modified. "
+        "Inspect it before deciding whether to recreate it."
+    )
 
-for class_name in CLASSES:
-    train_source = os.path.join(SOURCE_TRAIN, class_name)
-    train_target = os.path.join(TARGET_TRAIN, class_name)
+for split in ["Train", "Validation"]:
+    for class_name in CLASS_NAMES:
+        (OUTPUT_DIR / split / class_name).mkdir(
+            parents=True,
+            exist_ok=True
+        )
 
-    if not os.path.isdir(train_source):
-        raise FileNotFoundError(train_source)
+total_train = 0
+total_validation = 0
 
-    if not os.path.exists(train_target):
-        os.symlink(os.path.abspath(train_source), train_target)
+for class_name in CLASS_NAMES:
+    class_dir = SOURCE_DIR / class_name
 
-    test_source = os.path.join(SOURCE_TEST, TEST_FOLDER_MAP.get(class_name, class_name))
-    test_target = os.path.join(TARGET_TEST, class_name)
+    if not class_dir.is_dir():
+        raise FileNotFoundError(class_dir)
 
-    if not os.path.isdir(test_source):
-        raise FileNotFoundError(test_source)
+    images = sorted(
+        path for path in class_dir.iterdir()
+        if path.is_file() and path.suffix.lower() in IMAGE_EXTENSIONS
+    )
 
-    if not os.path.exists(test_target):
-        os.symlink(os.path.abspath(test_source), test_target)
+    if len(images) < 2:
+        raise ValueError(f"Not enough images in {class_name}")
 
-print("Dataset preparation completed!")
-print("Training classes:", len(os.listdir(TARGET_TRAIN)))
-print("Testing classes:", len(os.listdir(TARGET_TEST)))
+    train_images, validation_images = train_test_split(
+        images,
+        test_size=0.20,
+        random_state=42
+    )
+
+    for image_path in train_images:
+        target = OUTPUT_DIR / "Train" / class_name / image_path.name
+        target.symlink_to(image_path.resolve())
+    
+    for image_path in validation_images:
+        target = OUTPUT_DIR / "Validation" / class_name / image_path.name
+        target.symlink_to(image_path.resolve())
+
+    total_train += len(train_images)
+    total_validation += len(validation_images)
+
+    print(
+        f"{class_name}: "
+        f"{len(train_images)} training, "
+        f"{len(validation_images)} validation"
+    )
+
+print("\nDATASET SPLIT COMPLETE")
+print(f"Training images: {total_train}")
+print(f"Validation images: {total_validation}")
+print("Original Test dataset remains untouched.")
