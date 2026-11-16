@@ -1,0 +1,332 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis Result | FreshVision AI</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f4f8f4;
+            color: #20352a;
+            min-height: 100vh;
+        }
+
+        nav {
+            padding: 22px 8%;
+            background: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e5eee6;
+        }
+
+        .logo {
+            font-size: 23px;
+            font-weight: bold;
+            color: #267447;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 25px;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #267447;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .container {
+            max-width: 750px;
+            margin: 55px auto;
+            padding: 0 20px;
+        }
+
+        .result-card {
+            background: white;
+            padding: 40px;
+            border-radius: 18px;
+            box-shadow: 0 8px 35px rgba(30, 70, 45, 0.08);
+            text-align: center;
+        }
+
+        .heading {
+            margin-bottom: 30px;
+        }
+
+        .heading h1 {
+            color: #267447;
+            font-size: 30px;
+            margin-bottom: 10px;
+        }
+
+        .heading p {
+            color: #829087;
+            font-size: 14px;
+        }
+
+        .food-image {
+            width: 250px;
+            height: 250px;
+            object-fit: cover;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+
+        .result {
+            background: #f5faf5;
+            padding: 28px;
+            border-radius: 14px;
+        }
+
+        .label {
+            color: #829087;
+            font-size: 14px;
+        }
+
+        .food-name {
+            font-size: 30px;
+            font-weight: bold;
+            margin: 10px 0 22px;
+        }
+
+        .freshness {
+            display: inline-block;
+            padding: 10px 28px;
+            border-radius: 30px;
+            font-weight: bold;
+            margin: 12px 0 25px;
+        }
+
+        .fresh {
+            color: #207b43;
+            background: #dcf5e4;
+        }
+
+        .rotten {
+            color: #b33a35;
+            background: #ffe3df;
+        }
+
+        .confidence-section {
+            text-align: left;
+            margin-top: 5px;
+        }
+
+        .confidence-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .confidence-info span {
+            color: #718078;
+        }
+
+        .confidence-info strong {
+            color: #267447;
+        }
+
+        .progress-track {
+            width: 100%;
+            height: 10px;
+            background: #e1ebe3;
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: {{ confidence }}%;
+            background: #27834c;
+            border-radius: 20px;
+        }
+
+        .disclaimer {
+            font-size: 12px;
+            color: #829087;
+            line-height: 1.7;
+            margin-top: 25px;
+        }
+
+        .actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .button {
+            display: inline-block;
+            text-decoration: none;
+            padding: 14px 24px;
+            border-radius: 9px;
+            font-size: 14px;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        .primary {
+            background: #27834c;
+            color: white;
+        }
+
+        .primary:hover {
+            background: #1e693c;
+        }
+
+        .secondary {
+            background: #edf5ef;
+            color: #267447;
+        }
+
+        .secondary:hover {
+            background: #dcebe0;
+        }
+
+        @media (max-width: 600px) {
+            nav {
+                padding: 20px;
+            }
+
+            .logo {
+                font-size: 19px;
+            }
+
+            .nav-links {
+                gap: 12px;
+            }
+
+            .nav-links a {
+                font-size: 12px;
+            }
+
+            .container {
+                margin: 30px auto;
+            }
+
+            .result-card {
+                padding: 25px 18px;
+            }
+
+            .food-image {
+                width: 210px;
+                height: 210px;
+            }
+
+            .heading h1 {
+                font-size: 25px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav>
+        <div class="logo">FreshVision AI</div>
+
+        <div class="nav-links">
+            <a href="/">Home</a>
+            <a href="/dashboard">Dashboard</a>
+        </div>
+    </nav>
+
+    <main class="container">
+
+        <section class="result-card">
+
+            <div class="heading">
+                <h1>Analysis Complete</h1>
+                <p>Your food freshness prediction is ready.</p>
+            </div>
+
+            <img
+                src="{{ url_for('uploaded_file', filename=image_filename) }}"
+                class="food-image"
+                alt="Uploaded food image"
+            >
+            <div class="gradcam-section">
+    <h3>AI Explainability — Grad-CAM</h3>
+
+    <p>
+        The highlighted regions show which areas of the image
+        influenced the model's prediction.
+    </p>
+
+    <img
+        src="{{ url_for('uploaded_file', filename=overlay_filename) }}"
+        alt="Grad-CAM heatmap overlay"
+        class="gradcam-image"
+    >
+
+    <small>
+        This visualization explains model attention; it does not
+        independently confirm food freshness or spoilage.
+    </small>
+</div>
+
+            <div class="result">
+
+                <p class="label">Detected Food</p>
+
+                <div class="food-name">{{ food_name }}</div>
+
+                <p class="label">Freshness Status</p>
+
+                <div class="freshness {{ 'fresh' if freshness == 'Fresh' else 'rotten' }}">
+                    {{ freshness }}
+                </div>
+
+                <div class="confidence-section">
+
+                    <div class="confidence-info">
+                        <span>Model Confidence</span>
+                        <strong>{{ confidence }}%</strong>
+                    </div>
+
+                    <div
+                        class="progress-track"
+                        role="progressbar"
+                        aria-label="Model confidence"
+                        aria-valuemin="0"
+                        aria-valuemax="100"
+                        aria-valuenow="{{ confidence }}"
+                    >
+                        <div class="progress-fill"></div>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <p class="disclaimer">
+                This is an AI estimate based on visible image features.
+                It cannot detect invisible contamination or guarantee food safety.
+            </p>
+
+            <div class="actions">
+                <a href="/" class="button primary">Analyse Another Image</a>
+                <a href="/dashboard" class="button secondary">View Dashboard</a>
+            </div>
+
+        </section>
+
+    </main>
+
+</body>
+</html>
