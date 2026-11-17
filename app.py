@@ -19,6 +19,7 @@ app.config["UPLOAD_FOLDER"] = "uploads"
 app.config["MAX_CONTENT_LENGTH"] = 10 * 1024 * 1024
 
 ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "webp"}
+CONFIDENCE_THRESHOLD = 70.0
 
 initialize_database()
 os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
@@ -99,20 +100,18 @@ def predict():
         ).replace("rotten", "").capitalize()
 
         confidence = float(predictions[predicted_index]) * 100
+        low_confidence = confidence < CONFIDENCE_THRESHOLD
 
-        # Generate Grad-CAM heatmap
         heatmap = generate_gradcam(
             model,
             image_array,
             predicted_index
         )
 
-        # Resize heatmap to original image dimensions
         heatmap_image = Image.fromarray(heatmap).resize(
             original_image.size
         )
 
-        # Create original image and heatmap overlay
         overlay = Image.blend(
             original_image,
             heatmap_image,
@@ -141,7 +140,8 @@ def predict():
             freshness=freshness,
             confidence=round(confidence, 2),
             image_filename=unique_filename,
-            overlay_filename=overlay_filename
+            overlay_filename=overlay_filename,
+            low_confidence=low_confidence
         )
 
     except Exception:
@@ -204,12 +204,15 @@ def uploaded_file(filename):
         app.config["UPLOAD_FOLDER"],
         filename
     )
+
+
 @app.route("/reports/<filename>")
 def report_file(filename):
     return send_from_directory(
         "reports",
         filename
     )
+
 
 if __name__ == "__main__":
     app.run(debug=True)
