@@ -1,8 +1,26 @@
-.venv/
+# Python
 __pycache__/
 *.py[cod]
+.venv/
+venv/
 .DS_Store
-database/*.db
-uploads/*
+
+# Private configuration
+.env
+.env.*
+
+# Dataset and uploaded images
 data/
-uploads/
+uploads/*
+!uploads/.gitkeep
+
+# Local database
+database/*.db
+
+# Local backups
+app_backup.py
+models/*backup*
+
+# Experimental OOD training artifacts
+models/ood_detector.pkl
+models/ood_reference_features.npz

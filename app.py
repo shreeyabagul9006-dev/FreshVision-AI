@@ -11,6 +11,7 @@ from PIL import Image
 
 from database.db import initialize_database, get_connection
 from utils.gradcam import generate_gradcam
+from utils.food_detector import detect_food
 
 
 app = Flask(__name__)
@@ -21,6 +22,8 @@ app.config["MAX_CONTENT_LENGTH"] = 10 * 1024 * 1024
 ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "webp"}
 CONFIDENCE_THRESHOLD = 70.0
 
+IMAGE_SIZE = (160, 160)
+
 initialize_database()
 os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 
@@ -28,8 +31,11 @@ model = tf.keras.models.load_model(
     "models/freshvision_model.keras"
 )
 
+
 with open("models/class_names.json", "r") as file:
     class_names = json.load(file)
+
+
 
 
 @app.route("/")
@@ -41,22 +47,34 @@ def home():
 def predict():
 
     if "food_image" not in request.files:
-        return render_template("index.html", error="Please upload an image.")
+        return render_template(
+            "index.html",
+            error="Please upload an image."
+        )
 
     file = request.files["food_image"]
 
     if file.filename == "":
-        return render_template("index.html", error="Please select an image.")
+        return render_template(
+            "index.html",
+            error="Please select an image."
+        )
 
     filename = secure_filename(file.filename)
 
     if "." not in filename:
-        return render_template("index.html", error="Invalid image filename.")
+        return render_template(
+            "index.html",
+            error="Invalid image filename."
+        )
 
     extension = filename.rsplit(".", 1)[1].lower()
 
     if extension not in ALLOWED_EXTENSIONS:
-        return render_template("index.html", error="Unsupported image format.")
+        return render_template(
+            "index.html",
+            error="Unsupported image format."
+        )
 
     unique_filename = f"{uuid.uuid4().hex}_{filename}"
     overlay_filename = f"{uuid.uuid4().hex}_gradcam.jpg"
@@ -77,7 +95,18 @@ def predict():
         with Image.open(filepath) as uploaded_image:
             original_image = uploaded_image.convert("RGB")
 
-        model_image = original_image.resize((160, 160))
+        # Step 2: Check whether the uploaded image appears to contain food.
+        food_score = detect_food(original_image)
+
+        if food_score < 50.0:
+            os.remove(filepath)
+            return render_template(
+                "index.html",
+                error="This image does not appear to contain food. Please upload a food image."
+            )
+
+        # Step 3: Prepare the image for freshness classification.
+        model_image = original_image.resize(IMAGE_SIZE)
 
         image_array = np.array(
             model_image,
@@ -86,7 +115,12 @@ def predict():
 
         image_array = np.expand_dims(image_array, axis=0)
 
-        predictions = model.predict(image_array, verbose=0)[0]
+
+        # Step 3: Classify freshness.
+        predictions = model.predict(
+            image_array,
+            verbose=0
+        )[0]
 
         predicted_index = int(np.argmax(predictions))
         predicted_class = class_names[predicted_index]
@@ -102,6 +136,7 @@ def predict():
         confidence = float(predictions[predicted_index]) * 100
         low_confidence = confidence < CONFIDENCE_THRESHOLD
 
+        # Step 4: Generate Grad-CAM.
         heatmap = generate_gradcam(
             model,
             image_array,
@@ -118,8 +153,13 @@ def predict():
             alpha=0.4
         )
 
-        overlay.save(overlay_path, format="JPEG", quality=95)
+        overlay.save(
+            overlay_path,
+            format="JPEG",
+            quality=95
+        )
 
+        # Step 5: Save prediction history.
         connection = get_connection()
 
         connection.execute(
